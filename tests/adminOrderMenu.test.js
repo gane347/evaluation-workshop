@@ -46,7 +46,7 @@ test('order only main dish', async ({ page }) => {
   await orderMenu.deleteAllItems();
   await orderMenu.submitOrder();
 });
-/*
+
 test('sort items alphabetically', async ({ page }) => {
   const orderMenu = new OrderMenu(page);
   await orderMenu.sortAlphabetically();
@@ -57,14 +57,11 @@ test('sort items by price', async ({ page }) => {
   await orderMenu.sortByPrice();
   await orderMenu.validateItemsOrderByPrice();
 });
-test('sort items by popularity', async ({ page }) => {
-  const orderMenu = new OrderMenu(page);
-  await orderMenu.sortByPopularity();
-  await orderMenu.validateItemsOrderByPopularity();
-});*/
+
+//This test was generated mostly by Playwright codegen. The site should be in lithuanian and there should be an empty provider named '111'
 test('add new dish', async ({ page }) => {
   await page.getByText('mode_editPatiekalų Redagavimas').click();
-  await page.getByText('check111 0 Užsakymas(ai)').click();
+  await page.getByText('check111 0').click();
   await page.getByRole('button').filter({ hasText: 'add' }).click();
   await page.getByRole('textbox', { name: 'Kateg. Pavadinimas' }).fill('main');
   await page.getByRole('textbox', { name: 'Vertimas' }).click();
@@ -115,10 +112,15 @@ test('add new dish', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Vertimas' }).nth(3).fill('sriuba2');
   await page.getByRole('button', { name: 'Išsaugoti' }).click();
   
-
-  await page.getByText('check111 0 Užsakymas(ai)').click();
+  await page.goto('https://lunch.devbstaging.com/dishes/tuesday/111');
+  const orderMenu = new OrderMenu(page);
+  orderMenu.validateCategory('Soups', ['soup1', 'soup2']);
+  orderMenu.validateCategory('Main', ['main1', 'main2']);
+  
+  await page.getByText('mode_editPatiekalų Redagavimas').click();
+  await page.getByText('check111 0').click();
   await page.getByRole('button').filter({ hasText: 'more_vert' }).first().click();
   await page.getByText('deleteIštrinti').nth(1).click();
   await page.getByRole('button', { name: 'Išsaugoti' }).click();
-  
+
 });

@@ -17,9 +17,9 @@ export class OrderMenu {
         this.orderedDishes = page.locator('.v-chip__content');
         this.orderedDishesClearButtons = page.getByText('clear');
         this.submitButton = page.locator('.orders-list-button');
-        this.sortByPopularityButton = page.getByRole('button', { name: 'Popularity' });
-        this.sortAlphabeticallyButton = page.getByRole('button', { name: 'Alphabetical' });
-        this.sortByPriceButton = page.getByRole('button', { name: 'Price' });
+        this.sortByPopularityButton = page.getByRole('button', { name: 'POPULIARUMAS' });
+        this.sortAlphabeticallyButton = page.getByRole('button', { name: 'ABĖCĖLĖ' });
+        this.sortByPriceButton = page.getByRole('button', { name: 'KAINA' });
     }
     async checkDish(text: string) {
         await this.dishCards.filter({ hasText: text }).click();
@@ -72,27 +72,34 @@ export class OrderMenu {
 
     
     async validateItemsOrderByPrice() {
-        const dishCards = await this.dishCards.all();
-        const items = await Promise.all(dishCards.map(async (card) => {
-            const name = await card.locator('.v-card__text .non-selectable').textContent() || '';
-            const priceText = await card.locator('span.grey--text:not(.pl-1)').textContent() || '0';
-            return { name: name.trim(), price: parseFloat(priceText.trim()) };
-        }));
+        const categories = await this.page.locator('.v-subheader').all();
+        for (const category of categories) {
+            const prices = await category
+            .locator('.dish-card:not(.opacue) .v-avatar .grey--text:not(.pl-1)')
+            .allInnerTexts();
+        
+            const numericPrices = prices.map(price => parseFloat(price));
+            const sortedPrices = [...numericPrices].sort((a, b) => a - b);
+            
+            expect(numericPrices).toEqual(sortedPrices);
+        }
+}
 
-        const sortedItems = [...items].sort((a, b) => a.price - b.price);
-        expect(items.map(item => item.name)).toEqual(sortedItems.map(item => item.name));
-    }
+    async validateCategory(title: string, items: string[]) {
+        const categoryHeader = this.page.locator('.v-subheader', { hasText: title });
+        await expect(categoryHeader).toBeVisible();
 
-    
-    async validateItemsOrderByPopularity() {
-        const dishCards = await this.dishCards.all();
-        const items = await Promise.all(dishCards.map(async (card) => {
-            const name = await card.locator('.v-card__text .non-selectable').textContent() || '';
-            const popularityText = await card.locator('span.grey--text.pl-1').textContent() || '0';
-            return { name: name.trim(), popularity: parseInt(popularityText.trim(), 10) };
-        }));
+        const categorySection = categoryHeader.locator('xpath=../..');
+        const dishNames = await categorySection
+            .locator('.dish-card .v-card__text .non-selectable')
+            .allInnerTexts();
 
-        const sortedItems = [...items].sort((a, b) => b.popularity - a.popularity);
-        expect(items.map(item => item.name)).toEqual(sortedItems.map(item => item.name));
+        const normalizedDishNames = dishNames.map(name => name.trim());
+        
+        for (const item of items) {
+            expect(normalizedDishNames).toContain(item);
+        }
+
+        expect(normalizedDishNames.length).toBe(items.length);
     }
 }
